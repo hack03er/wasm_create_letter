@@ -1,0 +1,18 @@
+[package]
+name = "rust_lib"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+pdf-writer = "0.9.0"  # Replace printpdf with pdf-writer
+#printpdf = { version = "0.7.0", features = ["js-sys"] }
+#printpdf = { git = "https://github.com/fschutt/printpdf.git", rev = "2a12b71" }
+wasm-bindgen = "0.2.100"
+serde_bytes = "0.11"
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.6.5"
+#time = { version = "0.3.25", features = ["wasm-bindgen", "std"] }
+#js-sys = "0.3.40"
