@@ -32,4 +32,4 @@ jobs:
           check-latest: true
       - run: npm install
 
-      - run: npm run start
+      - run: npm run build
