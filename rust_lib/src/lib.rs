@@ -1,13 +1,8 @@
 use wasm_bindgen::prelude::*;
-// use printpdf::*;
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
-use pdf_writer::{Content, Name, Pdf, Rect, Ref, Str};
-// use printpdf::*;
-// use printpdf::path::{PaintMode, WindingOrder};
-use wasm_bindgen::prelude::*;
-use std::io::Write;
-use std::ptr::write;
+use pdf_writer::{Pdf, Rect, Ref, Content, Name, Finish};
+use pdf_writer::writers::Page;
 
 #[wasm_bindgen]
 extern "C" {
@@ -19,58 +14,55 @@ pub fn greet(name: &str) {
     alert(&format!("Hello, {}!", name));
 }
 
-// #[wasm_bindgen]
-// pub fn create_letter(sender: JsValue, recipient: JsValue) -> Result<JsValue, ()> {
-//     let sender_str: &str = serde_wasm_bindgen::from_value(sender)?;
-//     let recipient_str = serde_wasm_bindgen::from_value(recipient);
-//     let (doc, page1, layer1) = PdfDocument::new("PDF_Document_title", Mm(247.0), Mm(210.0), "Layer 1");
-//     let (page2, layer1) = doc.add_page(Mm(10.0), Mm(250.0),"Page 2, Layer 1");
-//
-//     let pdf_bytes = doc.save_to_bytes().unwrap();
-//     Ok(serde_wasm_bindgen::to_value(&pdf_bytes)?)
-// }
-
+// print_pdf version
 #[wasm_bindgen]
 pub fn create_letter(sender: JsValue, recipient: JsValue) -> Result<JsValue, JsValue> {
+    wasm_logger::init(wasm_logger::Config::default());
     let sender_str: String = serde_wasm_bindgen::from_value(sender)
         .map_err(|e| JsValue::from_str(&e.to_string()))?;
-    let recipient_str: String = serde_wasm_bindgen::from_value(recipient)
+    log::info!("{}", sender_str);
+    let _recipient_str: String = serde_wasm_bindgen::from_value(recipient)
         .map_err(|e| JsValue::from_str(&e.to_string()))?;
 
-    let catalog_id = Ref::new(1);
-    let page_tree_id = Ref::new(2);
-    let page_id = Ref::new(3);
-    let font_id = Ref::new(4);
-    let content_id = Ref::new(5);
-
-    let font_name = Name(b"F1");
-
-    // Create a new PDF document
+    // Define an ID allocator. Every time we need a new object, we just call
+    // `alloc.bump()`, which increases `alloc` by one and returns its previous
+    // value.
+    let mut alloc = Ref::new(1);
     let mut pdf = Pdf::new();
 
-    pdf.catalog(catalog_id).pages(page_tree_id);
-    pdf.pages(page_tree_id).kids([page_id]).count(1);
-    pdf.page(page_id)
-        .parent(page_tree_id)
-        .media_box(Rect::new(0.0, 0.0, 595.0, 842.0))
-        .contents(content_id)
-        .resources().fonts().pair(font_name, font_id);
+    // We'll collect the page IDs here.
+    let page_tree_id = alloc.bump();
+    let mut page_ids = vec![];
 
-    let mut content = Content::new();
-    content.begin_text();
-    content.set_font(font_name, 14.0);
-    content.next_line(108.0, 734.0);
-    content.show(Str(b"Hello World from Rust!"));
-    content.end_text();
-    pdf.stream(content_id, &content.finish());
+    let address_page_id = alloc.bump();
+    page_ids.push(address_page_id);
+    let mut address_page = pdf.page(page_ids[0]);
+    address_page.parent(page_tree_id);
+    address_page.media_box(Rect::new(0.0, 0.0, 595.0, 842.0));
 
+    let sender_content_id = alloc.bump();
+    address_page.contents(sender_content_id);
+    address_page.finish();
 
-    // Get the PDF bytes
-    let bytes = pdf.finish();
+    let mut sender_content = Content::new();
+    sender_content.begin_text();
+    sender_content.set_font(Name(b"Helvetica"), 14.0);
+    sender_content.next_line(108.0, 734.0);
+    sender_content.
+    sender_content.show(pdf_writer::TextStr("Oderstraße!"));
+    sender_content.end_text();
+    pdf.stream(sender_content_id, &sender_content.finish());
 
-    let output = ByteBuf::from(bytes);
+    // Finish up
+    // Write the root of the page tree.
+    pdf.pages(page_tree_id)
+        .kids(page_ids.iter().copied())
+        .count(page_ids.len() as i32);
+    // Write the document catalog.
+    pdf.catalog(alloc.bump()).pages(page_tree_id);
 
-    // Convert to JsValue and return
+    let output = ByteBuf::from(pdf.finish());
+    // Ok(serde_wasm_bindgen::to_value(&pdf_bytes)?)
     Ok(serde_wasm_bindgen::to_value(&output)
         .map_err(|e| JsValue::from_str(&e.to_string()))?)
 }

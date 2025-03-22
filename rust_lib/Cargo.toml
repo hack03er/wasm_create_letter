@@ -7,12 +7,14 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-pdf-writer = "0.9.0"  # Replace printpdf with pdf-writer
+#pdf-writer = "0.9.0"  # Replace printpdf with pdf-writer
 #printpdf = { version = "0.7.0", features = ["js-sys"] }
-#printpdf = { git = "https://github.com/fschutt/printpdf.git", rev = "2a12b71" }
+#printpdf = { git = "https://github.com/hack03er/printpdf", rev = "471a2c2" }
+#printpdf = {path = "printpdf"}
+pdf-writer = "0.12.1"
 wasm-bindgen = "0.2.100"
 serde_bytes = "0.11"
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6.5"
-#time = { version = "0.3.25", features = ["wasm-bindgen", "std"] }
-#js-sys = "0.3.40"
+log = "0.4.6"
+wasm-logger = "0.2.0"
