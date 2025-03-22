@@ -21,6 +21,7 @@ module.exports = {
     }),
     new WasmPackPlugin({
       crateDirectory: "./rust_lib", // Define where the root of the rust code is located (where the cargo.toml file is located)
+      // args: '--log-level warn',
     }),
   ],
 };

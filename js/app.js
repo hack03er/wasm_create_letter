@@ -1,6 +1,5 @@
 import * as wasm from "rust_lib";
 
-// wasm.greet("WebAssembly with npm");
 document.getElementById('addressForm').addEventListener('submit', function(e) {
     e.preventDefault();  // Prevent form from submitting normally
 
